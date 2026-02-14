@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマホWeb工房 - 採用サイトメーカー</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* カスタムスタイル */
+        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; }
+        .preview-frame { border: none; width: 100%; height: 100%; background: white; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+        
+        /* スマホプレビュー用の枠 */
+        .phone-mockup {
+            border: 12px solid #333;
+            border-radius: 30px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        /* スクロールバー装飾 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- ヘッダー -->
+    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 shadow-sm z-10 shrink-0">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-mobile-screen text-blue-600"></i>
+            <h1 class="font-bold text-lg tracking-tight">スマホ採用工房</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- 要件1：使い方ボタン -->
+            <button onclick="openModal('usageModal')" class="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-gray-100" title="使い方">
+                <i class="fa-solid fa-circle-question text-xl"></i>
+            </button>
+            <!-- 設定ボタン -->
+            <button onclick="openModal('settingsModal')" class="text-gray-500 hover:text-gray-800 transition-colors p-2 rounded-full hover:bg-gray-100" title="設定">
+                <i class="fa-solid fa-gear text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインエリア -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- 左側：編集エリア -->
+        <div id="editorPanel" class="w-full md:w-1/2 lg:w-5/12 overflow-y-auto bg-gray-50 p-4 md:p-6 pb-24">
+            <div class="max-w-xl mx-auto space-y-6">
+                
+                <!-- セクション1: 基本情報 -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-building mr-2"></i>基本情報</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">会社名・店舗名</label>
+                            <input type="text" id="inputCompany" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="株式会社サンプル" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">キャッチコピー</label>
+                            <input type="text" id="inputCatch" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="未来をつくる、技術の力。" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">テーマカラー</label>
+                            <div class="flex gap-3 overflow-x-auto pb-2">
+                                <label class="cursor-pointer"><input type="radio" name="themeColor" value="blue" checked onchange="updatePreview()" class="hidden peer"><span class="block w-8 h-8 rounded-full bg-blue-600 ring-2 ring-offset-2 ring-transparent peer-checked:ring-blue-600"></span></label>
+                                <label class="cursor-pointer"><input type="radio" name="themeColor" value="green" onchange="updatePreview()" class="hidden peer"><span class="block w-8 h-8 rounded-full bg-green-600 ring-2 ring-offset-2 ring-transparent peer-checked:ring-green-600"></span></label>
+                                <label class="cursor-pointer"><input type="radio" name="themeColor" value="orange" onchange="updatePreview()" class="hidden peer"><span class="block w-8 h-8 rounded-full bg-orange-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-orange-500"></span></label>
+                                <label class="cursor-pointer"><input type="radio" name="themeColor" value="red" onchange="updatePreview()" class="hidden peer"><span class="block w-8 h-8 rounded-full bg-red-600 ring-2 ring-offset-2 ring-transparent peer-checked:ring-red-600"></span></label>
+                                <label class="cursor-pointer"><input type="radio" name="themeColor" value="slate" onchange="updatePreview()" class="hidden peer"><span class="block w-8 h-8 rounded-full bg-slate-700 ring-2 ring-offset-2 ring-transparent peer-checked:ring-slate-700"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- セクション2: 写真 -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-images mr-2"></i>写真設定 (URL)</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">メイン画像（ヒーロー）</label>
+                            <input type="text" id="inputHeroImg" class="w-full p-2 text-sm border border-gray-300 rounded bg-gray-50 focus:bg-white outline-none" placeholder="https://..." oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">サブ画像1（現場の様子）</label>
+                            <input type="text" id="inputSubImg1" class="w-full p-2 text-sm border border-gray-300 rounded bg-gray-50 focus:bg-white outline-none" placeholder="https://..." oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">サブ画像2（働く仲間・社長）</label>
+                            <input type="text" id="inputSubImg2" class="w-full p-2 text-sm border border-gray-300 rounded bg-gray-50 focus:bg-white outline-none" placeholder="https://..." oninput="updatePreview()">
+                        </div>
+                        <p class="text-xs text-gray-400 text-right">※Unsplash等の画像URL推奨</p>
+                    </div>
+                </div>
+
+                <!-- セクション3: メッセージ -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-pen-nib mr-2"></i>メッセージ・コンテンツ</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">リード文（社長の想いなど）</label>
+                            <textarea id="inputLead" rows="4" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="私たちの仕事は、単なる製造ではありません..." oninput="updatePreview()"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">募集要項（簡易）</label>
+                            <textarea id="inputRequirements" rows="3" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="・未経験歓迎&#13;&#10;・月給25万円〜&#13;&#10;・土日祝休み" oninput="updatePreview()"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">応募ボタンのラベル</label>
+                            <input type="text" id="inputBtnLabel" class="w-full p-2 border border-gray-300 rounded outline-none" value="エントリーする" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- アクションボタン -->
+                <div class="pt-4 pb-8 space-y-3">
+                    <button onclick="downloadHTML()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-[1.01] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> 保存する (HTML書き出し)
+                    </button>
+                    
+                    <!-- 追加：テキスト書き出しボタン -->
+                    <button onclick="openTextExportModal()" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 rounded-xl shadow transition transform hover:scale-[1.01] flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-regular fa-copy"></i> 求人原稿テキストを作成 (Indeed用など)
+                    </button>
+                    
+                    <p class="text-center text-xs text-gray-400 mt-2">ブラウザにHTMLファイルとして保存されます</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 右側：プレビューエリア（PC時） -->
+        <div class="hidden md:flex flex-1 bg-gray-200 items-center justify-center p-8 relative">
+            <div class="phone-mockup w-[375px] h-[750px] relative bg-white">
+                <!-- Sandbox属性にallow-same-originを追加し、srcdocで書き換えるため安全 -->
+                <iframe id="previewFrame" class="preview-frame w-full h-full" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+            </div>
+            <div class="absolute bottom-4 right-4 text-gray-400 text-xs">Realtime Preview</div>
+        </div>
+
+        <!-- スマホ用プレビュー切り替えボタン（モバイルのみ表示） -->
+        <button onclick="toggleMobilePreview()" class="md:hidden fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-xl z-50 flex items-center gap-2 font-bold">
+            <i class="fa-solid fa-eye"></i> <span id="mobileToggleText">完成を見る</span>
+        </button>
+
+        <!-- スマホ用プレビューオーバーレイ -->
+        <div id="mobilePreviewOverlay" class="fixed inset-0 bg-gray-100 z-40 hidden flex-col">
+            <div class="h-14 bg-white border-b flex items-center justify-between px-4 shrink-0">
+                <span class="font-bold text-gray-700">プレビュー</span>
+                <button onclick="toggleMobilePreview()" class="text-blue-600 font-bold">閉じる</button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="mobilePreviewFrame" class="preview-frame w-full h-full" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 要件2：「使い方」モーダル -->
+    <div id="usageModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-box bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-fade-in-up">
+            <div class="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-gray-800"><i class="fa-regular fa-lightbulb mr-2 text-yellow-500"></i>使い方</h3>
+                <button onclick="closeModal('usageModal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh] space-y-6">
+                
+                <!-- (1) 目的 -->
+                <div>
+                    <h4 class="font-bold text-blue-600 border-l-4 border-blue-600 pl-3 mb-2">目的</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 ml-1">
+                        <li>スマホで採用サイト（採用LP）のたたき台を短時間で作る</li>
+                        <li>社長の想い／現場の雰囲気／応募導線を1ページにまとめる</li>
+                        <li>完成イメージを見ながら整える</li>
+                    </ul>
+                </div>
+
+                <!-- (2) 使い方 -->
+                <div>
+                    <h4 class="font-bold text-blue-600 border-l-4 border-blue-600 pl-3 mb-2">使い方</h4>
+                    <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2 ml-1">
+                        <li><span class="font-semibold text-gray-800">基本情報</span>（会社名、住所など）を入力</li>
+                        <li><span class="font-semibold text-gray-800">色合い</span>（ブランドカラー）を選ぶ</li>
+                        <li><span class="font-semibold text-gray-800">写真</span>を3枚セット（現場／仲間／社長 など）</li>
+                        <li><span class="font-semibold text-gray-800">「完成」</span>へ切り替えて見え方を確認</li>
+                        <li>問題なければ<span class="font-semibold text-gray-800">「保存」</span>でHTMLを書き出す</li>
+                    </ol>
+                    <div class="mt-3 bg-blue-50 p-3 rounded text-xs text-blue-800 space-y-1">
+                        <p>・必要なら設定からデモデータ反映で例を確認できる</p>
+                        <p>・不要なデータはクリアで初期化できる</p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="bg-gray-50 p-4 text-center">
+                <button onclick="closeModal('usageModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設定モーダル（要件3：修正済み） -->
+    <div id="settingsModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-box bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden">
+            <div class="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-gear mr-2"></i>設定</h3>
+                <button onclick="closeModal('settingsModal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">エディタの設定やデータの管理を行います。</p>
+                
+                <!-- 通常の設定項目があればここに配置 -->
+                <div class="border rounded p-3 mb-6 bg-gray-50">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="autoSaveToggle" checked class="accent-blue-600">
+                        <span class="text-sm text-gray-700">自動保存を有効にする</span>
+                    </label>
+                </div>
+
+                <hr class="border-gray-100 my-4">
+
+                <!-- 要件3：下部に薄い文字で配置 -->
+                <div class="flex items-center justify-center gap-4 text-xs">
+                    <button onclick="loadDemoData()" class="text-gray-400 hover:text-blue-600 transition-colors hover:underline">
+                        製造業デモデータを反映 (前田建設)
+                    </button>
+                    <span class="text-gray-300">|</span>
+                    <button onclick="clearData()" class="text-gray-400 hover:text-red-500 transition-colors hover:underline">
+                        データクリア
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 追加：テキスト書き出し用モーダル -->
+    <div id="textExportModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-box bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-fade-in-up">
+            <div class="bg-slate-700 border-b border-gray-600 p-4 flex justify-between items-center">
+                <h3 class="font-bold text-white"><i class="fa-regular fa-file-lines mr-2"></i>求人原稿テキスト</h3>
+                <button onclick="closeModal('textExportModal')" class="text-gray-300 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-2">Indeed等の求人媒体やSNS投稿用に、整形済みのテキストを生成しました。</p>
+                <textarea id="exportTextArea" class="w-full h-64 p-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-slate-500 outline-none resize-none bg-gray-50"></textarea>
+                
+                <div class="flex gap-3 mt-4">
+                    <button onclick="copyToClipboard()" id="copyBtn" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-copy"></i> クリップボードにコピー
+                    </button>
+                </div>
+                <div id="copyMsg" class="text-green-600 text-center text-xs font-bold h-4 mt-2 opacity-0 transition-opacity">
+                    コピーしました！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript ロジック -->
+    <script>
+        // データ管理用オブジェクト
+        const defaultData = {
+            company: "",
+            catchCopy: "",
+            theme: "blue",
+            heroImg: "",
+            subImg1: "",
+            subImg2: "",
+            lead: "",
+            requirements: "",
+            btnLabel: "エントリーする"
+        };
+
+        // デモデータを「株式会社前田建設」に変更
+        const demoData = {
+            company: "株式会社前田建設",
+            catchCopy: "街をつくり、未来を残す。",
+            theme: "green", // 建設業なので安全の緑
+            // 建設現場の全景 (新しい画像)
+            heroImg: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            // 働く人・エンジニア (新しい画像)
+            subImg1: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
+            // ヘルメット姿の作業員 (新しい画像)
+            subImg2: "https://images.unsplash.com/photo-1535732820275-9ffd998cac22?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80",
+            lead: "私たちは創業以来、地域に根ざした建設会社として、数多くのランドマークを手掛けてきました。\n「誠実な仕事」をモットーに、技術と信頼で街の発展に貢献しています。\n経験豊富な先輩社員が丁寧に指導しますので、未経験からでも安心してスタートできます。",
+            requirements: "・現場監督 / 施工管理技士\n・月給 28万円〜 (経験者優遇)\n・資格取得支援制度あり\n・マイカー通勤可",
+            btnLabel: "見学会に申し込む"
+        };
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            updatePreview();
+        });
+
+        // モーダル操作
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+        
+        // オーバーレイクリックで閉じる
+        document.querySelectorAll('.modal-overlay').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (e.target === el) closeModal(el.id);
+            });
+        });
+
+        // テキスト書き出し用モーダルを開く処理
+        function openTextExportModal() {
+            const company = document.getElementById('inputCompany').value;
+            const catchCopy = document.getElementById('inputCatch').value;
+            const lead = document.getElementById('inputLead').value;
+            const requirements = document.getElementById('inputRequirements').value;
+
+            // テキスト整形
+            const exportText = 
+`【求人タイトル】
+${catchCopy}
+
+【会社名】
+${company}
+
+【仕事内容・アピールポイント】
+${lead}
+
+【募集要項・条件】
+${requirements}
+
+--------------------------------------------------
+※このテキストはIndeed等の求人媒体の入力欄や
+SNSへの投稿テキストとしてご活用ください。
+--------------------------------------------------`;
+
+            document.getElementById('exportTextArea').value = exportText;
+            openModal('textExportModal');
+        }
+
+        // クリップボードコピー処理
+        function copyToClipboard() {
+            const copyText = document.getElementById("exportTextArea");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // モバイル対応
+
+            // クリップボードAPIを試みる
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(copyText.value).then(() => {
+                    showCopyMsg();
+                }).catch(() => {
+                    // 失敗したらexecCommandフォールバック
+                    document.execCommand('copy');
+                    showCopyMsg();
+                });
+            } else {
+                document.execCommand('copy');
+                showCopyMsg();
+            }
+        }
+
+        function showCopyMsg() {
+            const msg = document.getElementById('copyMsg');
+            msg.classList.remove('opacity-0');
+            setTimeout(() => {
+                msg.classList.add('opacity-0');
+            }, 2000);
+        }
+
+
+        // デモデータ反映（確認ダイアログなしで即実行に変更）
+        function loadDemoData() {
+            // エラー原因になりうるconfirmを削除し、即反映
+            setInputValues(demoData);
+            closeModal('settingsModal');
+            updatePreview();
+        }
+
+        // データクリア
+        function clearData() {
+            // クリアは誤操作防止のためconfirmを残すが、失敗しても実行するようにtry-catchはしない（標準機能）
+            if(window.confirm && confirm('入力データを全て消去しますか？')) {
+                executeClear();
+            } else {
+                // confirmが使えない環境用フォールバック（念の為）
+                executeClear();
+            }
+        }
+        
+        function executeClear() {
+            setInputValues(defaultData);
+            closeModal('settingsModal');
+            updatePreview();
+            try {
+                localStorage.removeItem('webmaker_data');
+            } catch(e) {
+                console.warn("Storage clear failed:", e);
+            }
+        }
+
+        // 入力値のセット
+        function setInputValues(data) {
+            document.getElementById('inputCompany').value = data.company || "";
+            document.getElementById('inputCatch').value = data.catchCopy || "";
+            document.getElementById('inputHeroImg').value = data.heroImg || "";
+            document.getElementById('inputSubImg1').value = data.subImg1 || "";
+            document.getElementById('inputSubImg2').value = data.subImg2 || "";
+            document.getElementById('inputLead').value = data.lead || "";
+            document.getElementById('inputRequirements').value = data.requirements || "";
+            document.getElementById('inputBtnLabel').value = data.btnLabel || "";
+            
+            // ラジオボタン
+            const themeRadios = document.getElementsByName('themeColor');
+            for(let r of themeRadios) {
+                if(r.value === data.theme) r.checked = true;
+            }
+        }
+
+        // ストレージ保存・読み込み
+        function saveToStorage(data) {
+            try {
+                if(document.getElementById('autoSaveToggle').checked) {
+                    localStorage.setItem('webmaker_data', JSON.stringify(data));
+                }
+            } catch (e) {
+                console.warn("Storage save failed:", e);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem('webmaker_data');
+                if(saved) {
+                    setInputValues(JSON.parse(saved));
+                }
+            } catch (e) {
+                console.warn("Storage load failed:", e);
+            }
+        }
+
+        // プレビュー更新
+        function updatePreview() {
+            // ラジオボタンの取得チェック
+            const checkedRadio = document.querySelector('input[name="themeColor"]:checked');
+            const selectedTheme = checkedRadio ? checkedRadio.value : "blue";
+
+            const data = {
+                company: document.getElementById('inputCompany').value || "会社名",
+                catchCopy: document.getElementById('inputCatch').value || "ここにキャッチコピーが入ります",
+                theme: selectedTheme,
+                heroImg: document.getElementById('inputHeroImg').value || "https://placehold.co/800x450/e2e8f0/64748b?text=Main+Image",
+                subImg1: document.getElementById('inputSubImg1').value || "https://placehold.co/400x300/e2e8f0/64748b?text=Image1",
+                subImg2: document.getElementById('inputSubImg2').value || "https://placehold.co/400x300/e2e8f0/64748b?text=Image2",
+                lead: (document.getElementById('inputLead').value || "ここにリード文が入ります。\n改行も反映されます。").replace(/\n/g, '<br>'),
+                requirements: (document.getElementById('inputRequirements').value || "・条件リスト1\n・条件リスト2").replace(/\n/g, '<br>'),
+                btnLabel: document.getElementById('inputBtnLabel').value || "応募する"
+            };
+
+            saveToStorage(data); // 自動保存
+
+            // HTML生成
+            const html = buildHTML(data);
+            
+            // PCプレビュー更新：srcdocを使用
+            const pcFrame = document.getElementById('previewFrame');
+            if(pcFrame) pcFrame.srcdoc = html;
+
+            // モバイルプレビュー更新：srcdocを使用
+            const mobileFrame = document.getElementById('mobilePreviewFrame');
+            if(mobileFrame) mobileFrame.srcdoc = html;
+        }
+
+        // スマホプレビュー切り替え
+        let isMobilePreviewOpen = false;
+        function toggleMobilePreview() {
+            const overlay = document.getElementById('mobilePreviewOverlay');
+            const btnText = document.getElementById('mobileToggleText');
+            
+            isMobilePreviewOpen = !isMobilePreviewOpen;
+            
+            if(isMobilePreviewOpen) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                btnText.textContent = "編集に戻る";
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                btnText.textContent = "完成を見る";
+            }
+        }
+
+        // HTML構築関数
+        function buildHTML(data) {
+            // カラーマップ
+            const colors = {
+                blue: { main: '#2563eb', bg: '#eff6ff', text: '#1e3a8a' },
+                green: { main: '#16a34a', bg: '#f0fdf4', text: '#14532d' }, // 建設業向けの濃い緑
+                orange: { main: '#f97316', bg: '#fff7ed', text: '#7c2d12' },
+                red: { main: '#dc2626', bg: '#fef2f2', text: '#7f1d1d' },
+                slate: { main: '#475569', bg: '#f8fafc', text: '#1e293b' }
+            };
+            // デフォルトのテーマカラーを設定
+            const theme = colors[data.theme] || colors['blue'];
+
+            return `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${data.company} - 採用情報</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; color: #333; line-height: 1.6; background: #fff; }
+        header { padding: 15px; background: white; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:100; opacity: 0.95; }
+        .logo { font-weight: bold; font-size: 1.1rem; color: ${theme.main}; }
+        .hero { position: relative; width: 100%; height: 280px; overflow: hidden; background: #ddd; }
+        .hero img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-text { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: white; padding: 40px 20px 20px; }
+        .hero h2 { margin: 0; font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .container { padding: 20px; }
+        .section { margin-bottom: 40px; }
+        .section-title { font-size: 1.2rem; font-weight: bold; border-left: 5px solid ${theme.main}; padding-left: 10px; margin-bottom: 15px; color: ${theme.text}; }
+        .lead-text { font-size: 1rem; margin-bottom: 20px; white-space: pre-wrap; }
+        .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .gallery img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+        .requirements-box { background: ${theme.bg}; padding: 20px; border-radius: 10px; border: 1px solid ${theme.main}; }
+        .cta-btn { display: block; width: 100%; padding: 16px; background: ${theme.main}; color: white; text-align: center; text-decoration: none; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); margin-top: 20px; transition: opacity 0.2s; }
+        .cta-btn:active { opacity: 0.8; transform: translateY(2px); }
+        footer { background: #333; color: #fff; padding: 30px 20px; text-align: center; font-size: 0.8rem; }
+        
+        /* 要件4：フッター追加表記用スタイル */
+        .beta-mark { margin-top: 15px; font-size: 10px; opacity: 0.5; color: #aaa; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">${data.company}</div>
+        <a href="#" style="font-size: 0.8rem; color: ${theme.main}; text-decoration: none; border: 1px solid ${theme.main}; padding: 4px 10px; border-radius: 4px;">Entry</a>
+    </header>
+
+    <div class="hero">
+        <img src="${data.heroImg}" onerror="this.src='https://placehold.co/800x450/ccc/999?text=No+Image'">
+        <div class="hero-text">
+            <h2>${data.catchCopy}</h2>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h3 class="section-title">私たちについて</h3>
+            <p class="lead-text">${data.lead}</p>
+            
+            <div class="gallery">
+                <img src="${data.subImg1}" onerror="this.src='https://placehold.co/400x300/ccc/999?text=No+Image'">
+                <img src="${data.subImg2}" onerror="this.src='https://placehold.co/400x300/ccc/999?text=No+Image'">
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">募集要項</h3>
+            <div class="requirements-box">
+                <p style="margin:0; line-height:1.8;">${data.requirements}</p>
+            </div>
+            <a href="#" class="cta-btn">${data.btnLabel}</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 ${data.company} All Rights Reserved.</p>
+        <!-- 要件4：ベータ版表記 -->
+        <div class="beta-mark">テスト版（ベータ版） © 2026 SPC</div>
+    </footer>
+</body>
+</html>
+            `;
+        }
+
+        // ダウンロード機能
+        function downloadHTML() {
+            // 現在の入力状態からデータを生成（ダウンロード用）
+            const checkedRadio = document.querySelector('input[name="themeColor"]:checked');
+            const selectedTheme = checkedRadio ? checkedRadio.value : "blue";
+            
+            const data = {
+                company: document.getElementById('inputCompany').value || "会社名",
+                catchCopy: document.getElementById('inputCatch').value || "",
+                theme: selectedTheme,
+                heroImg: document.getElementById('inputHeroImg').value || "",
+                subImg1: document.getElementById('inputSubImg1').value || "",
+                subImg2: document.getElementById('inputSubImg2').value || "",
+                lead: (document.getElementById('inputLead').value || "").replace(/\n/g, '<br>'),
+                requirements: (document.getElementById('inputRequirements').value || "").replace(/\n/g, '<br>'),
+                btnLabel: document.getElementById('inputBtnLabel').value || "応募する"
+            };
+            const htmlContent = buildHTML(data);
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recruit_site.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
